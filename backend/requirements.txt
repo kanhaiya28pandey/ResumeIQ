@@ -6,3 +6,6 @@ passlib[bcrypt]
 python-dotenv
 pydantic[email]
 python-multipart
+pdfplumber
+python-docx
+sentence-transformers
