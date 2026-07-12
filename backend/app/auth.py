@@ -43,13 +43,11 @@ def signup(data: SignupRequest):
 def login(data: LoginRequest):
     user = users_collection.find_one({"email": data.email})
 
-    # not telling the client whether email exists or password is wrong,
-    # keeping the error same either way so people can't guess valid emails
     if not user or not verify_password(data.password, user["passwordHash"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     token = create_access_token(str(user["_id"]))
-    return {"token": token, "email": user["email"]}
+    return {"token": token, "email": user["email"], "name": user.get("name", "")}
 
 
 @router.post("/forgot-password")
