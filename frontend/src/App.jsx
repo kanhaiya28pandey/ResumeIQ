@@ -5,6 +5,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import NewScan from "./pages/NewScan";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/new-scan" element={<ProtectedRoute><NewScan /></ProtectedRoute>} />
     </Routes>
   );
 }
