@@ -3,6 +3,7 @@ from pydantic import BaseModel, EmailStr
 
 # what the client sends when signing up
 class SignupRequest(BaseModel):
+    name: str
     email: EmailStr
     password: str
 

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException
-
+from fastapi import APIRouter, HTTPException, Depends
+from app.auth_middleware import get_current_user
 from app.database import users_collection
 from app.models import (
     SignupRequest,
@@ -24,12 +24,12 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/signup")
 def signup(data: SignupRequest):
-    # don't let someone sign up twice with the same email
     existing_user = users_collection.find_one({"email": data.email})
     if existing_user:
         raise HTTPException(status_code=400, detail="An account with this email already exists")
 
     user_doc = {
+        "name": data.name,
         "email": data.email,
         "passwordHash": hash_password(data.password),
         "createdAt": datetime.now(timezone.utc),
@@ -37,8 +37,7 @@ def signup(data: SignupRequest):
     result = users_collection.insert_one(user_doc)
 
     token = create_access_token(str(result.inserted_id))
-    return {"token": token, "email": data.email}
-
+    return {"token": token, "email": data.email, "name": data.name}
 
 @router.post("/login")
 def login(data: LoginRequest):
@@ -125,3 +124,10 @@ def _to_object_id(id_str: str):
     # small helper so we don't import ObjectId in every function above
     from bson import ObjectId
     return ObjectId(id_str)
+
+@router.get("/me")
+def get_me(user_id: str = Depends(get_current_user)):
+    user = users_collection.find_one({"_id": _to_object_id(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"name": user.get("name", ""), "email": user["email"], "createdAt": user["createdAt"]}
