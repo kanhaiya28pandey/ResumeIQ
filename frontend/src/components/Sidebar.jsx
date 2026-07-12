@@ -11,7 +11,7 @@ const navItems = [
 function Sidebar() {
   return (
     <div
-      className="w-60 min-h-screen p-4 flex flex-col gap-1"
+      className="w-60 h-screen sticky top-0 p-4 flex flex-col gap-1"
       style={{ background: "var(--bg-card)", borderRight: "1px solid var(--border-subtle)" }}
     >
       <div className="px-2 py-4 mb-2">

@@ -6,6 +6,7 @@ import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NewScan from "./pages/NewScan";
+import History from "./pages/History";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/new-scan" element={<ProtectedRoute><NewScan /></ProtectedRoute>} />
+      <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
     </Routes>
   );
 }
