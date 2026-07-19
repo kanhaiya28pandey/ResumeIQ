@@ -1,44 +1,76 @@
 import { useEffect, useState } from "react";
 
-function ScoreRing({ score, label, size = 120 }) {
+function ScoreRing({ score, label, size = 150 }) {
   const [animatedScore, setAnimatedScore] = useState(0);
 
   useEffect(() => {
-    const timer = setTimeout(() => setAnimatedScore(score), 100);
+    const timer = setTimeout(() => setAnimatedScore(score), 150);
     return () => clearTimeout(timer);
   }, [score]);
 
-  const radius = (size - 12) / 2;
+  const radius = (size - 14) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (animatedScore / 100) * circumference;
 
-  const color = score >= 75 ? "var(--success)" : score >= 40 ? "var(--warning)" : "var(--danger)";
+  const color =
+    score >= 80
+      ? "var(--success)"
+      : score >= 60
+      ? "var(--warning)"
+      : "var(--danger)";
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
-          <circle cx={size / 2} cy={size / 2} r={radius} stroke="var(--border-subtle)" strokeWidth="8" fill="none" />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="var(--border-divider)"
+            strokeWidth="12"
+            fill="none"
+          />
+
           <circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
             stroke={color}
-            strokeWidth="8"
+            strokeWidth="12"
             fill="none"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
-            style={{ transition: "stroke-dashoffset 1s ease-out" }}
+            style={{
+              transition: "stroke-dashoffset 1.2s ease",
+            }}
           />
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>
-            {score}%
-          </span>
+
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div
+            className="text-4xl font-bold"
+            style={{ color: "var(--text-primary)" }}
+          >
+            {score}
+          </div>
+
+          <div
+            className="text-sm"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            %
+          </div>
         </div>
       </div>
-      <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{label}</span>
+
+      <p
+        className="mt-4 font-medium"
+        style={{ color: "var(--text-primary)" }}
+      >
+        {label}
+      </p>
     </div>
   );
 }
