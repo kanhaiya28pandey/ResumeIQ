@@ -9,10 +9,8 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [shake, setShake] = useState(false);
-
   const { login } = useAuth();
   const navigate = useNavigate();
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
