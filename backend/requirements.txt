@@ -3,10 +3,22 @@ uvicorn
 pymongo
 python-jose[cryptography]
 passlib[bcrypt]
+bcrypt
 python-dotenv
 pydantic[email]
 python-multipart
+
+# Resume Parsing
 pdfplumber
 python-docx
-sentence-transformers
+PyMuPDF
+
+# AI & Machine Learning
 google-genai
+sentence-transformers
+torch
+numpy
+scikit-learn
+
+# Email Validation
+email-validator
