@@ -1,17 +1,66 @@
-function StatCard({ label, value, icon: Icon, color }) {
+import { ArrowUpRight } from "lucide-react";
+
+function StatCard({title, value, subtitle = "", icon: Icon, color = "#7C6FF0", }) {
   return (
     <div
-      className="p-5 rounded-2xl animate-fade-in-up"
-      style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
+      className="group rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      style={{
+        background: "var(--bg-card)",
+        border: "1px solid var(--border-subtle)",
+      }}
     >
-      <div
-        className="w-10 h-10 rounded-full flex items-center justify-center mb-3"
-        style={{ background: `${color}22` }}
-      >
-        <Icon size={18} style={{ color }} />
+      <div className="flex items-start justify-between">
+        <div>
+          <p
+            className="text-sm font-medium"
+            style={{
+              color: "var(--text-secondary)",
+            }}
+          >
+            {title}
+          </p>
+
+          <h2
+            className="mt-2 text-3xl font-bold"
+            style={{
+              color: "var(--text-primary)",
+            }}
+          >
+            {value}
+          </h2>
+
+          {subtitle && (
+            <p
+              className="mt-3 text-xs flex items-center gap-1"
+              style={{
+                color: "var(--text-muted)",
+              }}
+            >
+              <ArrowUpRight
+                size={14}
+                style={{ color }}
+              />
+
+              {subtitle}
+            </p>
+          )}
+
+        </div>
+
+        <div
+          className="w-14 h-14 rounded-2xl flex items-center justify-center"
+          style={{
+            background: `${color}20`,
+          }}
+        >
+          <Icon
+            size={26}
+            style={{
+              color,
+            }}
+          />
+        </div>
       </div>
-      <p className="text-sm mb-1" style={{ color: "var(--text-secondary)" }}>{label}</p>
-      <p className="text-2xl font-semibold" style={{ color: "var(--text-primary)" }}>{value}</p>
     </div>
   );
 }
