@@ -4,13 +4,11 @@ from app.analyze import router as analyze_router
 from app.history import router as history_router
 from app.dashboard import router as dashboard_router
 from app.cover_letter import router as cover_letter_router
-
+from app.scan import router as scan_router
 from app.auth import router as auth_router
 
 app = FastAPI(title="Resume Matcher API")
 
-# allowing the React frontend (running on a different port) to call this API
-# in production you'd lock this down to your actual frontend domain
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
@@ -24,6 +22,7 @@ app.include_router(analyze_router)
 app.include_router(history_router)
 app.include_router(dashboard_router)
 app.include_router(cover_letter_router)
+app.include_router(scan_router)
 
 @app.get("/")
 def health_check():
