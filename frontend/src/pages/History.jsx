@@ -1,135 +1,561 @@
-import { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, CalendarDays, Clock3, Briefcase, Award, Target, ChevronRight, } from "lucide-react";
 import api from "../api/axiosInstance";
-import Sidebar from "../components/Sidebar";
+import DashboardLayout from "../layouts/DashboardLayout";
 import SkillTag from "../components/SkillTag";
 
 function History() {
-  const [scans, setScans] = useState(null);
-  const [expandedId, setExpandedId] = useState(null);
+  const [scans, setScans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("All");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    api.get("/history").then((res) => setScans(res.data));
+    const loadHistory = async () => {
+      try {
+        const res = await api.get("/history");
+        setScans(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadHistory();
   }, []);
 
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  // Helpers
+  const getVerdictColor = (verdict = "") => {
+    verdict = verdict.toLowerCase();
+    if (verdict.includes("excellent"))
+      return "var(--success)";
 
-  const scoreColor = (score) => {
-    if (score >= 75) return "var(--success)";
-    if (score >= 40) return "var(--warning)";
+    if (verdict.includes("good"))
+      return "#3b82f6";
+
+    if (verdict.includes("moderate"))
+      return "var(--warning)";
+
     return "var(--danger)";
   };
 
-  if (!scans) {
+  const scoreColor = (score) => {
+    if (score >= 85)
+      return "var(--success)";
+
+    if (score >= 70)
+      return "var(--warning)";
+
+    return "var(--danger)";
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString + "Z");
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    if (date.toDateString() === today.toDateString()) {
+      return `Today • ${date.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kolkata",
+      })}`;
+    }
+
+    if (date.toDateString() === yesterday.toDateString()) {
+      return `Yesterday • ${date.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kolkata",
+      })}`;
+    }
+
+    return `${date.toLocaleDateString("en-IN", {
+
+      day: "2-digit",
+
+      month: "short",
+
+      year: "numeric",
+
+      timeZone: "Asia/Kolkata",
+
+    })} • ${date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata",
+    })}`;
+
+  };
+
+  // Search + Filter
+
+  const filteredScans = useMemo(() => {
+    return scans.filter((scan) => {
+      const searchMatch =
+        scan.jobTitle
+          ?.toLowerCase()
+          .includes(search.toLowerCase());
+      if (filter === "All")
+        return searchMatch;
+
+      return (
+        searchMatch &&
+        scan.overallVerdict === filter
+      );
+
+    });
+
+  }, [search, filter, scans]);
+
+  //---------------------------------------------------
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex" style={{ background: "var(--bg-page)" }}>
-        <Sidebar />
-        <div className="flex-1 flex items-center justify-center">
-          <span className="spinner w-8 h-8 border-2 rounded-full" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[70vh]">
+          <span
+            className="spinner w-10 h-10 rounded-full border-2"
+            style={{
+              borderColor: "var(--accent)",
+              borderTopColor: "transparent",
+            }}
+          />
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: "var(--bg-page)" }}>
-      <Sidebar />
+    <DashboardLayout>
+      {/* Header */}
 
-      <div className="flex-1 p-8 max-w-4xl">
-        <h1 className="text-2xl font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
-          History
-        </h1>
-        <p className="text-sm mb-8" style={{ color: "var(--text-secondary)" }}>
-          All your past resume scans
-        </p>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
 
-        {scans.length === 0 ? (
-          <div
-            className="p-10 rounded-2xl text-center animate-fade-in-up"
-            style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
+        <div>
+
+          <h1
+            className="text-3xl font-bold"
+            style={{
+              color: "var(--text-primary)",
+            }}
           >
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              No scans yet. Head to New Scan to analyze your first resume.
+            History
+          </h1>
+
+          <p
+            className="mt-2"
+            style={{
+              color: "var(--text-secondary)",
+            }}
+          >
+            View all your previous resume analyses.
+          </p>
+
+        </div>
+
+        {/* Search */}
+
+        <div className="relative w-full lg:w-80">
+
+          <Search
+            size={18}
+            className="absolute left-3 top-3"
+            color="gray"
+          />
+
+          <input
+            type="text"
+            placeholder="Search Job Title..."
+            value={search}
+            onChange={(e) =>
+              setSearch(e.target.value)
+            }
+            className="w-full rounded-xl pl-10 pr-4 py-3 outline-none"
+            style={{
+              background: "var(--bg-card)",
+              border:
+                "1px solid var(--border-subtle)",
+              color: "var(--text-primary)",
+            }}
+          />
+
+        </div>
+
+      </div>
+
+      {/* Filters */}
+
+      <div className="flex flex-wrap gap-3 mt-8">
+
+        {[
+          "All",
+          "Excellent Match",
+          "Good Match",
+          "Moderate Match",
+          "Poor Match",
+        ].map((item) => (
+
+          <button
+            key={item}
+            onClick={() => setFilter(item)}
+            className="px-4 py-2 rounded-full transition-all"
+            style={{
+              background:
+                filter === item
+                  ? "var(--accent)"
+                  : "var(--bg-card)",
+
+              color:
+                filter === item
+                  ? "#fff"
+                  : "var(--text-primary)",
+
+              border:
+                "1px solid var(--border-subtle)",
+            }}
+          >
+            {item}
+          </button>
+
+        ))}
+
+      </div>
+
+      {/* Cards */}
+
+      <div className="space-y-6 mt-8">
+
+        {filteredScans.length === 0 ? (
+
+          <div
+            className="rounded-2xl p-10 text-center"
+            style={{
+              background: "var(--bg-card)",
+              border:
+                "1px solid var(--border-subtle)",
+            }}
+          >
+            <h2
+              style={{
+                color: "var(--text-primary)",
+              }}
+            >
+              No Resume Scans Found
+            </h2>
+
+            <p
+              className="mt-2"
+              style={{
+                color: "var(--text-secondary)",
+              }}
+            >
+              Try changing the search or filter.
             </p>
+
           </div>
+
         ) : (
-          <div className="flex flex-col gap-3">
-            {scans.map((scan) => (
-              <div
-                key={scan._id}
-                className="rounded-2xl overflow-hidden animate-fade-in-up"
-                style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
-              >
-                <button
-                  onClick={() => toggleExpand(scan._id)}
-                  className="w-full flex items-center justify-between p-5"
-                >
-                  <div className="text-left">
-                    <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{scan.jobTitle}</p>
-                    <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-                      {new Date(scan.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-                    </p>
+
+          filteredScans.map((scan) => (
+
+            <div
+              key={scan.id}
+              className="rounded-2xl p-6 transition-all hover:-translate-y-1"
+              style={{
+                background: "var(--bg-card)",
+                border:
+                  "1px solid var(--border-subtle)",
+              }}
+            >
+              {/* Top */}
+
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+
+                <div>
+
+                  <h2
+                    className="text-xl font-semibold"
+                    style={{
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    {scan.jobTitle}
+                  </h2>
+
+                  <div className="flex flex-wrap gap-4 mt-3">
+
+                    <div
+                      className="flex items-center gap-2"
+                      style={{
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      <CalendarDays size={16} />
+                      {formatDate(scan.createdAt)}
+                    </div>
+
+                    <div
+                      className="flex items-center gap-2"
+                      style={{
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      <Briefcase size={16} />
+                      {scan.detectedDomain}
+                    </div>
+
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Match</p>
-                      <p className="text-sm font-semibold" style={{ color: scoreColor(scan.matchScore) }}>{scan.matchScore}%</p>
+                </div>
+
+                <span
+                  className="px-4 py-2 rounded-full font-medium"
+                  style={{
+                    background: `${getVerdictColor(
+                      scan.overallVerdict
+                    )}22`,
+                    color: getVerdictColor(
+                      scan.overallVerdict
+                    ),
+                  }}
+                >
+                  {scan.overallVerdict}
+                </span>
+
+              </div>
+
+              {/* Score Cards */}
+
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+
+                {[
+                  {
+                    title: "Match",
+                    value: `${scan.matchScore}%`,
+                    color: scoreColor(scan.matchScore),
+                  },
+                  {
+                    title: "ATS",
+                    value: `${scan.atsScore}%`,
+                    color: scoreColor(scan.atsScore),
+                  },
+                  {
+                    title: "Grade",
+                    value: scan.atsGrade,
+                    color: "var(--accent)",
+                  },
+                  {
+                    title: "Experience",
+                    value: scan.experienceLevel,
+                    color: "#3b82f6",
+                  },
+                ].map((item) => (
+
+                  <div
+                    key={item.title}
+                    className="rounded-xl p-4"
+                    style={{
+                      background: "var(--bg-page)",
+                      border:
+                        "1px solid var(--border-divider)",
+                    }}
+                  >
+
+                    <div
+                      className="text-sm"
+                      style={{
+                        color:
+                          "var(--text-secondary)",
+                      }}
+                    >
+                      {item.title}
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs" style={{ color: "var(--text-secondary)" }}>ATS</p>
-                      <p className="text-sm font-semibold" style={{ color: scoreColor(scan.atsScore) }}>{scan.atsScore}</p>
+
+                    <div
+                      className="text-xl font-bold mt-2"
+                      style={{
+                        color: item.color,
+                      }}
+                    >
+                      {item.value}
                     </div>
-                    {expandedId === scan._id ? (
-                      <ChevronUp size={18} style={{ color: "var(--text-muted)" }} />
-                    ) : (
-                      <ChevronDown size={18} style={{ color: "var(--text-muted)" }} />
-                    )}
+
                   </div>
+
+                ))}
+
+              </div>
+
+              {/* Skills */}
+
+              <div className="mt-6">
+
+                <h3
+                  className="font-semibold mb-3"
+                  style={{
+                    color: "var(--success)",
+                  }}
+                >
+                  Matched Skills
+                </h3>
+
+                <div className="flex flex-wrap gap-2">
+
+                  {scan.matchedSkills?.length ? (
+
+                    <>
+                      {scan.matchedSkills
+                        .slice(0, 6)
+                        .map((skill) => (
+
+                          <SkillTag
+                            key={skill}
+                            skill={skill}
+                            matched
+                          />
+
+                        ))}
+
+                      {scan.matchedSkills.length >
+                        6 && (
+
+                          <span
+                            className="px-3 py-1 rounded-full text-sm"
+                            style={{
+                              background:
+                                "var(--bg-page)",
+                            }}
+                          >
+                            +
+                            {scan.matchedSkills
+                              .length - 6}{" "}
+                            more
+                          </span>
+
+                        )}
+
+                    </>
+
+                  ) : (
+
+                    <span
+                      style={{
+                        color:
+                          "var(--text-secondary)",
+                      }}
+                    >
+                      None
+                    </span>
+
+                  )}
+
+                </div>
+
+              </div>
+
+              {/* Missing Skills */}
+
+              <div className="mt-6">
+
+                <h3
+                  className="font-semibold mb-3"
+                  style={{
+                    color: "var(--danger)",
+                  }}
+                >
+                  Missing Skills
+                </h3>
+
+                <div className="flex flex-wrap gap-2">
+
+                  {scan.missingSkills?.length ? (
+
+                    <>
+                      {scan.missingSkills
+                        .slice(0, 6)
+                        .map((skill) => (
+
+                          <SkillTag
+                            key={skill}
+                            skill={skill}
+                            matched={false}
+                          />
+
+                        ))}
+
+                      {scan.missingSkills.length >
+                        6 && (
+
+                          <span
+                            className="px-3 py-1 rounded-full text-sm"
+                            style={{
+                              background:
+                                "var(--bg-page)",
+                            }}
+                          >
+                            +
+                            {scan.missingSkills
+                              .length - 6}{" "}
+                            more
+                          </span>
+
+                        )}
+
+                    </>
+
+                  ) : (
+
+                    <span
+                      style={{
+                        color:
+                          "var(--text-secondary)",
+                      }}
+                    >
+                      None
+                    </span>
+
+                  )}
+
+                </div>
+
+              </div>
+
+              {/* Footer */}
+
+              <div className="flex justify-end mt-8">
+
+                <button
+                  onClick={() => navigate(`/scan/${scan.id}`)}
+                  className="flex items-center gap-2 px-5 py-3 rounded-xl transition-all hover:scale-105"
+                  style={{
+                    background: "var(--accent)",
+                    color: "#fff",
+                  }}
+                >
+                  View Details
+                  <ChevronRight size={18} />
                 </button>
 
-                {expandedId === scan._id && (
-                  <div className="px-5 pb-5" style={{ borderTop: "1px solid var(--border-divider)" }}>
-                    <div className="pt-4">
-                      <p className="text-xs mb-2" style={{ color: "var(--text-secondary)" }}>Matched Skills</p>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {scan.matchedSkills.length === 0 ? (
-                          <p className="text-xs" style={{ color: "var(--text-muted)" }}>None</p>
-                        ) : (
-                          scan.matchedSkills.map((s) => <SkillTag key={s} skill={s} matched />)
-                        )}
-                      </div>
-
-                      <p className="text-xs mb-2" style={{ color: "var(--text-secondary)" }}>Missing Skills</p>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {scan.missingSkills.length === 0 ? (
-                          <p className="text-xs" style={{ color: "var(--text-muted)" }}>None</p>
-                        ) : (
-                          scan.missingSkills.map((s) => <SkillTag key={s} skill={s} matched={false} />)
-                        )}
-                      </div>
-
-                      <p className="text-xs mb-2" style={{ color: "var(--text-secondary)" }}>Suggestions</p>
-                      <ul className="flex flex-col gap-1">
-                        {scan.improveSuggestions.map((s, i) => (
-                          <li key={i} className="text-xs flex gap-2" style={{ color: "var(--text-secondary)" }}>
-                            <span style={{ color: "var(--accent)" }}>•</span>
-                            {s}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                )}
               </div>
-            ))}
-          </div>
+
+            </div>
+
+          ))
+
         )}
+
       </div>
-    </div>
+
+    </DashboardLayout>
+
   );
+
 }
 
 export default History;
