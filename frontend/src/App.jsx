@@ -7,6 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NewScan from "./pages/NewScan";
 import History from "./pages/History";
+import ScanDetails from "./pages/ScanDetails";
+import ChangePassword from "./pages/ChangePassword";
 
 function App() {
   return (
@@ -19,6 +21,9 @@ function App() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/new-scan" element={<ProtectedRoute><NewScan /></ProtectedRoute>} />
       <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+      <Route path="/scan/:id" element={<ProtectedRoute><ScanDetails /></ProtectedRoute>} />
+      <Route path="/change-password" element={<ProtectedRoute><ChangePassword /> </ProtectedRoute>}
+      />
     </Routes>
   );
 }
