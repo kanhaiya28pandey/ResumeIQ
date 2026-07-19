@@ -1,11 +1,8 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, } from "react";
+import { Link, useNavigate, } from "react-router-dom";
 import api from "../api/axiosInstance";
 
 function ForgotPassword() {
-  const [step, setStep] = useState(1);
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
   const [resetToken, setResetToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -13,18 +10,19 @@ function ForgotPassword() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [shake, setShake] = useState(false);
-
   const navigate = useNavigate();
-
+  const [step, setStep] = useState(1);
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
   const triggerShake = (msg) => {
     setError(msg);
     setShake(true);
     setTimeout(() => setShake(false), 300);
   };
-
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
     try {
       await api.post("/auth/forgot-password", { email });
@@ -40,6 +38,7 @@ function ForgotPassword() {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
     try {
       const res = await api.post("/auth/verify-otp", { email, otp });
@@ -56,7 +55,7 @@ function ForgotPassword() {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setError("");
-
+    setSuccess("");
     if (newPassword.length < 8) {
       triggerShake("Password must be at least 8 characters long");
       return;
@@ -69,8 +68,18 @@ function ForgotPassword() {
     setLoading(true);
     try {
       await api.post("/auth/reset-password", { resetToken, newPassword });
-      setSuccess("Password reset successful, redirecting to login...");
-      setTimeout(() => navigate("/login"), 2000);
+      setSuccess(
+        "Password changed successfully."
+      );
+
+      setTimeout(() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("email");
+        localStorage.removeItem("name");
+
+        navigate("/login");
+
+      }, 2000);
     } catch (err) {
       triggerShake(err.response?.data?.detail || "Something went wrong");
     } finally {
@@ -89,7 +98,7 @@ function ForgotPassword() {
         <div className="scan-line" />
 
         <h1 className="text-2xl font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
-          Reset password
+          Reset Password
         </h1>
         <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
           {step === 1 && "Enter your email to receive an OTP"}
@@ -210,10 +219,17 @@ function ForgotPassword() {
             </button>
           </form>
         )}
-
-        <p className="text-sm text-center mt-6" style={{ color: "var(--text-secondary)" }}>
+        <p
+          className="text-sm text-center mt-6"
+          style={{ color: "var(--text-secondary)" }}
+        >
           Remembered your password?{" "}
-          <Link to="/login" style={{ color: "var(--accent)" }}>Log in</Link>
+          <Link
+            to="/login"
+            style={{ color: "var(--accent)" }}
+          >
+            Log in
+          </Link>
         </p>
       </div>
     </div>
